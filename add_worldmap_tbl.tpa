@@ -4,6 +4,7 @@ DEFINE_ACTION_FUNCTION ~ADD_WORLDMAP_TBL~
 	INT_VAR
 	inclSv = 0            // to 1 if you want to patch saved game worldmaps as well as the master worldmap. NB: changes to saved games are uninstallable
 	verbose = 0           // to 1 to enable debug messages
+	patch_bp_files = 0    // to 1 to patch/create gameFolder/Worldmap files used by BP-BGT Worldmap for wmp creation (needs path_to_areas_bp, path_to_links, path_to_trans)
 	add_x = 0             // add this value to area's X (east-west) coordinate specified in TBL file (BP-BGT Worldmap areas file is excluded)
 	add_y = 0             // add this value to area's Y (north-south) coordinate specified in TBL file (BP-BGT Worldmap areas file is excluded)
 	STR_VAR
@@ -26,6 +27,7 @@ BEGIN
 	ACTION_CLEAR_ARRAY trans_array
 	ACTION_CLEAR_ARRAY save_dirs
 	ACTION_CLEAR_ARRAY areNum_array
+	ACTION_CLEAR_ARRAY bp_array
 	ACTION_IF NOT ~%path_to_areas%~ STR_EQ ~~ BEGIN
 		COPY - ~%path_to_areas%~ ~.../%path_to_areas%~
 			//PRETTY_PRINT_2DA
@@ -127,6 +129,21 @@ BEGIN
 						BUT_ONLY
 					END
 				END
+			END
+		END
+	END
+	ACTION_IF patch_bp_files = 1 BEGIN
+		ACTION_DEFINE_ASSOCIATIVE_ARRAY bp_array BEGIN
+			~map_mods_areas.tbl~ => ~%path_to_areas_bp%~
+			~map_mods_links.tbl~ => ~%path_to_links%~
+			~map_mods_trans.tra~ => ~%path_to_trans%~
+		END
+		MKDIR ~Worldmap~
+		ACTION_PHP_EACH bp_array AS file => path BEGIN
+			ACTION_IF FILE_EXISTS ~Worldmap/%file%~ BEGIN
+				COPY ~Worldmap/%file%~ ~Worldmap~ APPEND_FILE ~%path%~
+			END ELSE BEGIN
+				COPY ~%path%~ ~Worldmap/%file%~
 			END
 		END
 	END
@@ -293,7 +310,7 @@ END
 
 /*
 TBL file format explanation:
-AREAS.TBL
+- Areas declaration
 SHORT_NAME // resource reference of the area to add (like "ar0700")
 CONTENT    // same as above
 LONG_NAME  // area script name, e.g. same as above
@@ -304,8 +321,7 @@ Y_POS      // area's Y (north-south) coordinate
 NAME       // name of the area as @ reference used in TRA file or 'N' for none
 TOOLTIP    // tooltip of the area as @ reference used in TRA file or 'N' for none
 LOAD_IM    // loading screen MOS file (like "filename")
-
-LINKS.TBL
+- Links declaration
 SRC_AREA   // area from which the links should originate
 SRC_NWSE   // directional node from which the links should originate. Legal values for this variable are "n", "e", "s", "w". Links are added to all four nodes by default.
 TARGET_ARE // area to which the links should lead
