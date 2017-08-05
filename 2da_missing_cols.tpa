@@ -17,12 +17,11 @@ BEGIN
 		END
 		PATCH_IF cols = 0 BEGIN
 			COUNT_2DA_COLS "cols"
-			SET cols = cols - 1
 		END
 		REPLACE_EVALUATE CASE_INSENSITIVE ~^\([^ ]+[ ]+[^ ]+[ ]+.+\)$~ BEGIN
 			INNER_PATCH_SAVE MATCH1 ~%MATCH1%~ BEGIN
 				COUNT_REGEXP_INSTANCES ~[ ]+~ num_matches
-				WHILE (num_matches < cols) BEGIN
+				WHILE (num_matches < (cols - 1)) BEGIN
 					REPLACE_TEXTUALLY ~$~ ~ %entry%~
 					SET num_matches = num_matches + 1
 				END
@@ -44,12 +43,11 @@ BEGIN
 	END
 	PATCH_IF cols = 0 BEGIN
 		COUNT_2DA_COLS "cols"
-		SET cols = cols - 1
 	END
 	REPLACE_EVALUATE CASE_INSENSITIVE ~^\([^ ]+[ ]+[^ ]+[ ]+.+\)$~ BEGIN
 		INNER_PATCH_SAVE MATCH1 ~%MATCH1%~ BEGIN
 			COUNT_REGEXP_INSTANCES ~[ ]+~ num_matches
-			WHILE (num_matches < cols) BEGIN
+			WHILE (num_matches < (cols - 1)) BEGIN
 				REPLACE_TEXTUALLY ~$~ ~ %entry%~
 				SET num_matches = num_matches + 1
 			END
