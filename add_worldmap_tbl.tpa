@@ -5,7 +5,7 @@ DEFINE_ACTION_FUNCTION ~ADD_WORLDMAP_TBL~
 	inclSv = 0            // to 1 if you want to patch saved game worldmaps as well as the master worldmap. NB: changes to saved games are uninstallable
 	verbose = 0           // to 1 to enable debug messages
 	patch_bp_files = 0    // to 1 to patch/create gameFolder/Worldmap files used by BP-BGT Worldmap for wmp creation (needs path_to_areas_bp, path_to_links, path_to_trans)
-	patch_mastarea = 0    // to 1 to patch MASTAREA.2da if area entries doesn't exist there yet
+	patch_mastarea = 0    // to 1 to patch MASTAREA.2da if area entries don't exist there yet
 	add_x = 0             // add this value to area's X (east-west) coordinate specified in TBL file (BP-BGT Worldmap areas file is excluded)
 	add_y = 0             // add this value to area's Y (north-south) coordinate specified in TBL file (BP-BGT Worldmap areas file is excluded)
 	STR_VAR
@@ -48,7 +48,7 @@ BEGIN
 					DEFINE_ASSOCIATIVE_ARRAY valid_areas BEGIN ~%i%~ => ~%short_name%~ END
 					PATCH_IF patch_mastarea = 1 BEGIN
 						INNER_ACTION BEGIN
-							APPEND ~MASTAREA.2da~ ~%short_name%  value~ UNLESS ~^[ %TAB%]*%short_name%[ %TAB%]+value~
+							APPEND ~MASTAREA.2da~ ~%short_name% value~ UNLESS ~^[ %TAB%]*%short_name%[ %TAB%]+value~
 						END
 					END
 				END
@@ -66,7 +66,7 @@ BEGIN
 					DEFINE_ASSOCIATIVE_ARRAY valid_areas_bp BEGIN ~%i%~ => ~%short_name%~ END
 					PATCH_IF patch_mastarea = 1 BEGIN
 						INNER_ACTION BEGIN
-							APPEND ~MASTAREA.2da~ ~%short_name%  value~ UNLESS ~^[ %TAB%]*%short_name%[ %TAB%]+value~
+							APPEND ~MASTAREA.2da~ ~%short_name% value~ UNLESS ~^[ %TAB%]*%short_name%[ %TAB%]+value~
 						END
 					END
 				END
