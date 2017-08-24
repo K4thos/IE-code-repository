@@ -2,7 +2,9 @@
 //Example usage:
 //LAM JOINABLE_NPC_ARRAY
 //ACTION_PHP_EACH JOINABLE_NPC_ARRAY AS cre => dv BEGIN
-//	PRINT ~%cre% => %dv%~
+//	PRINT ~%cre% => %dv%~ 
+//	COPY_EXISTING ~%cre%~ ~override~
+	//your patching code
 //END
 
 DEFINE_ACTION_MACRO JOINABLE_NPC_ARRAY BEGIN
