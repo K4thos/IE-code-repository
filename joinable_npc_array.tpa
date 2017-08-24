@@ -23,7 +23,7 @@ DEFINE_ACTION_MACRO JOINABLE_NPC_ARRAY BEGIN
 	END
 	//Generate array with joinable NPC DV
 	ACTION_PHP_EACH JOINABLE_NPC_ARRAY_2da AS file => ~~ BEGIN
-		ACTION_IF (FILE_EXISTS_IN_GAME ~%file%.2da~) BEGIN
+		ACTION_IF FILE_EXISTS_IN_GAME ~%file%.2da~ BEGIN
 			COPY_EXISTING ~%file%.2da~ ~override~
 				COUNT_2DA_ROWS 3 "cntrow"
 				FOR (i = 1; i < cntrow; i = i + 1) BEGIN
