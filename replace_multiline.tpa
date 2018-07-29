@@ -1,4 +1,10 @@
-//Patch function that replaces set or all occurrences of the given regexp pattern in the file with the given string. variable substitution (e.g., kit and music names) is performed on both the string and the regexp. Unlike REPLACE_TEXTUALLY the pattern can be multi-line text, even without using regexp. Just like REPLACE_BCS_BLOCK the function ignores pattern whitespace. The function can be also used as a COUNT_REGEXP_INSTANCES alternative with the above mentioned features.
+//Patch function that replaces set or all occurrences of the given regexp pattern in the file with the given string.
+//variable substitution (e.g., kit and music names) is performed on both the string and the regexp pattern.
+//Unlike REPLACE_TEXTUALLY the pattern can be multi-line text, even without using regexp.
+//Just like REPLACE_BCS_BLOCK the function ignores pattern whitespace.
+//The function can be also used as a COUNT_REGEXP_INSTANCES alternative with the above mentioned features.
+//Optional PATCH_WARN message is printed if the task could not be performed (pattern not found or different amount of pattern matches than expected).
+
 DEFINE_PATCH_FUNCTION REPLACE_MULTILINE
 	INT_VAR
 		num = "-1"     //amount of times the pattern should be replaced with string (-1 by default which is at least 1 but without max limit)
