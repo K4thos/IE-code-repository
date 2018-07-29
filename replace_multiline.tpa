@@ -20,16 +20,10 @@ DEFINE_PATCH_FUNCTION REPLACE_MULTILINE
 	BEGIN
 	INNER_PATCH_SAVE textToReplace ~%pattern%~ BEGIN
 		PATCH_IF strict = 1 BEGIN
-			//REPLACE_TEXTUALLY ~\([\$\^\.\*\+\?\[\]\\]\)~ ~\\1~ //for some reason doesn't work
-			REPLACE_TEXTUALLY ~\$~ ~\$~
-			REPLACE_TEXTUALLY ~\^~ ~\^~
-			REPLACE_TEXTUALLY ~\.~ ~\.~
-			REPLACE_TEXTUALLY ~\*~ ~\*~
-			REPLACE_TEXTUALLY ~\+~ ~\+~
-			REPLACE_TEXTUALLY ~\?~ ~\?~
+			REPLACE_TEXTUALLY ~\\~ ~\\\\~
 			REPLACE_TEXTUALLY ~\[~ ~\[~
 			REPLACE_TEXTUALLY ~\]~ ~\]~
-			REPLACE_TEXTUALLY ~\\~ ~\\~
+			REPLACE_EVALUATE ~\([\$\^\.\*\+\?]\)~ BEGIN END ~\%MATCH1%~
 		END
 		REPLACE_TEXTUALLY ~[%WNL%%LNL%%MNL%%TAB% ]+~ ~[%WNL%%LNL%%MNL%%TAB% ]+~
 	END
@@ -42,18 +36,18 @@ DEFINE_PATCH_FUNCTION REPLACE_MULTILINE
 		PATCH_IF num_matches != num BEGIN
 			PATCH_IF num_matches = 0 BEGIN
 				PATCH_IF warn = 1 BEGIN
-					PATCH_WARN ~WARNING %SOURCE_FILESPEC%: %pattern%%LNL%pattern not found~
+					PATCH_WARN ~WARNING %SOURCE_FILESPEC% - pattern not found:%LNL%%pattern%~
 				END
 				SET warned = 1
 			END ELSE PATCH_IF num >= 0 AND (num_matches > num OR num_matches < num) BEGIN
 				PATCH_IF warn = 1 BEGIN
-					PATCH_WARN ~WARNING %SOURCE_FILESPEC%: %pattern%%LNL%pattern replaced %num_matches% time(s) instead of %num%~
+					PATCH_WARN ~WARNING %SOURCE_FILESPEC% - pattern replaced %num_matches% time(s) instead of %num%:%LNL%%pattern%~
 				END
 				SET warned = 1
 			END
 		END
 		PATCH_IF verbose = 1 AND warned = 0 BEGIN
-			PATCH_PRINT ~Patching %SOURCE_FILESPEC%: %pattern% => %string%%LNL%pattern replaced %num_matches% time(s)~
+			PATCH_PRINT ~Patching %SOURCE_FILESPEC% - pattern replaced %num_matches% time(s):%LNL%%pattern% => %string%~
 		END
 	END ELSE BEGIN
 		COUNT_REGEXP_INSTANCES ~%textToReplace%~ num_matches
