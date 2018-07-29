@@ -8,6 +8,7 @@
 DEFINE_PATCH_FUNCTION REPLACE_MULTILINE
 	INT_VAR
 		num = "-1"     //amount of times the pattern should be replaced with string (-1 by default which is at least 1 but without max limit)
+		strict = 0     //set to 1 to enable strict checking (auto escapes $^.*+?[]\ special characters)
 		verbose = 1    //set to 0 to skip printing patching message
 		warn = 1       //set to 0 to skip printing warning message if the function can't do what you ask it to do
 		only_count = 0 //set to to 1 to skip pattern replacing and just return num_matches (COUNT_REGEXP_INSTANCES alternative)
@@ -18,6 +19,18 @@ DEFINE_PATCH_FUNCTION REPLACE_MULTILINE
 		num_matches    //amount of times the pattern has been found
 	BEGIN
 	INNER_PATCH_SAVE textToReplace ~%pattern%~ BEGIN
+		PATCH_IF strict = 1 BEGIN
+			//REPLACE_TEXTUALLY ~\([\$\^\.\*\+\?\[\]\\]\)~ ~\\1~ //for some reason doesn't work
+			REPLACE_TEXTUALLY ~\$~ ~\$~
+			REPLACE_TEXTUALLY ~\^~ ~\^~
+			REPLACE_TEXTUALLY ~\.~ ~\.~
+			REPLACE_TEXTUALLY ~\*~ ~\*~
+			REPLACE_TEXTUALLY ~\+~ ~\+~
+			REPLACE_TEXTUALLY ~\?~ ~\?~
+			REPLACE_TEXTUALLY ~\[~ ~\[~
+			REPLACE_TEXTUALLY ~\]~ ~\]~
+			REPLACE_TEXTUALLY ~\\~ ~\\~
+		END
 		REPLACE_TEXTUALLY ~[%WNL%%LNL%%MNL%%TAB% ]+~ ~[%WNL%%LNL%%MNL%%TAB% ]+~
 	END
 	SET num_matches = 0
