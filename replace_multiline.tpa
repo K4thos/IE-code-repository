@@ -1,5 +1,5 @@
 //Patch function that replaces set or all occurrences of the given regexp pattern in the file with the given string.
-//variable substitution (e.g., kit and music names) is performed on both the string and the regexp pattern.
+//Use EVAL to perform variable substitution on the string and/or the regexp pattern.
 //Unlike REPLACE_TEXTUALLY the pattern can be multi-line text, even without using regexp.
 //Just like REPLACE_BCS_BLOCK the function ignores pattern whitespace.
 //The function can be also used as a COUNT_REGEXP_INSTANCES alternative with the above mentioned features.
