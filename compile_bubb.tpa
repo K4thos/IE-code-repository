@@ -1,0 +1,52 @@
+//Action function that let's you compile BAF files containing upcoming Bubb lua functions.
+//The function converts easy to read multiline Lua code into a single line syntax supported by weidu
+
+//Example usage:
+//LAF COMPILE_BUBB STR_VAR path = ~someDir/someFile.baf~ END
+//LAF COMPILE_BUBB STR_VAR path = ~someDir~ END
+
+DEFINE_ACTION_FUNCTION COMPILE_BUBB
+INT_VAR
+	eval = 1 //set to 0 to disable variable evaluation during compilation
+STR_VAR
+	path = ~~ //can be either a single BAF file or directory where BAF files are located
+	quote = ~"~ //overwrite default quotation for Bubb_LUA functions (weidu supports following quotations: ", ~, %, ~~~~~)
+BEGIN
+	OUTER_SPRINT newline ~%WNL%%LNL%%MNL%%TAB% ~
+	//create array of files to compile
+	ACTION_IF ((~%path%~ STRING_CONTAINS_REGEXP ~\.[Bb][Aa][Ff]$~) = 0) BEGIN
+		ACTION_DEFINE_ASSOCIATIVE_ARRAY files_array BEGIN ~%path%~ => ~~ END
+	END ELSE BEGIN
+		ACTION_BASH_FOR ~%path%~ ~^.+\.baf$~ BEGIN
+			ACTION_DEFINE_ASSOCIATIVE_ARRAY files_array BEGIN ~%BASH_FOR_FILESPEC%~ => ~~ END
+		END		
+	END
+	//convert multiline Bubb_LUA functions into single line
+	ACTION_PHP_EACH files_array AS file => dummy BEGIN
+		PRINT ~Compilling %file%...~
+		COPY - ~%file%~ ~.../%file%~ //copy the file into inlined file
+			PATCH_IF ~%quote%~ STR_EQ "~~~~~" BEGIN
+				REPLACE_TEXTUALLY "~~~~~" "@"
+				SPRINT quote ~@~ //single character so that it can be captured with the same regexp code
+			END
+			PATCH_FOR_EACH function IN Bubb_LUA Bubb_StoreObjectStat BEGIN //add any other Bubb function here
+				REPLACE_EVALUATE CASE_INSENSITIVE ~%function%([%newline%]*%quote%[%newline%]*\([^%quote%]+\)[%newline%]*%quote%[%newline%]*)~ BEGIN
+					PATCH_PRINT ~Converting %function% code: %MATCH1%~
+					INNER_PATCH_SAVE MATCH1 ~%MATCH1%~ BEGIN //convert multiline Bubb function content into single line
+						REPLACE_TEXTUALLY ~[%newline%]+~ ~ ~
+						REPLACE_TEXTUALLY ~^ ~ ~~
+						REPLACE_TEXTUALLY ~ $~ ~~
+					END
+				END ~%function%(%quote%%MATCH1%%quote%)~ //return correct string
+			END
+			PATCH_IF ~%quote%~ STR_EQ ~@~ BEGIN
+				REPLACE_TEXTUALLY ~@~ "~~~~~"
+			END
+		//compile inlined BAF
+		ACTION_IF eval = 1 BEGIN
+			COMPILE EVAL ~.../%file%~
+		END ELSE BEGIN
+			COMPILE ~.../%file%~
+		END
+	END
+END
