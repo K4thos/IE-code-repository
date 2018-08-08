@@ -1,4 +1,4 @@
-//Action function that let's you compile BAF files containing upcoming Bubb lua functions.
+//Action function that lets you compile BAF files containing upcoming Bubb lua functions.
 //The function converts easy to read multiline Lua code into a single line syntax supported by weidu
 
 //Example usage:
@@ -10,7 +10,7 @@ INT_VAR
 	eval = 1 //set to 0 to disable variable evaluation during compilation
 STR_VAR
 	path = ~~ //can be either a single BAF file or directory where BAF files are located
-	quote = ~"~ //overwrite default quotation for Bubb_LUA functions (weidu supports following quotations: ", ~, %, ~~~~~)
+	quote = ~"~ //adjust quotation that you're using for Bubb_LUA style functions (weidu supports following quotations: ", ~, %, ~~~~~)
 BEGIN
 	OUTER_SPRINT newline ~%WNL%%LNL%%MNL%%TAB% ~
 	//create array of files to compile
@@ -21,23 +21,23 @@ BEGIN
 			ACTION_DEFINE_ASSOCIATIVE_ARRAY files_array BEGIN ~%BASH_FOR_FILESPEC%~ => ~~ END
 		END		
 	END
-	//convert multiline Bubb_LUA functions into single line
+	//loop through files_array
 	ACTION_PHP_EACH files_array AS file => dummy BEGIN
 		PRINT ~Compilling %file%...~
-		COPY - ~%file%~ ~.../%file%~ //copy the file into inlined file
+		COPY - ~%file%~ ~.../%file%~ //copy the BAF into inlined file
 			PATCH_IF ~%quote%~ STR_EQ "~~~~~" BEGIN
 				REPLACE_TEXTUALLY "~~~~~" "@"
 				SPRINT quote ~@~ //single character so that it can be captured with the same regexp code
 			END
-			PATCH_FOR_EACH function IN Bubb_LUA Bubb_StoreObjectStat BEGIN //add any other Bubb function here
+			PATCH_FOR_EACH function IN Bubb_LUA Bubb_StoreObjectStat BEGIN //add Bubb style function names here
 				REPLACE_EVALUATE CASE_INSENSITIVE ~%function%([%newline%]*%quote%[%newline%]*\([^%quote%]+\)[%newline%]*%quote%[%newline%]*)~ BEGIN
 					PATCH_PRINT ~Converting %function% code: %MATCH1%~
-					INNER_PATCH_SAVE MATCH1 ~%MATCH1%~ BEGIN //convert multiline Bubb function content into single line
+					INNER_PATCH_SAVE MATCH1 ~%MATCH1%~ BEGIN //convert multi-line Bubb function content into single line
 						REPLACE_TEXTUALLY ~[%newline%]+~ ~ ~
 						REPLACE_TEXTUALLY ~^ ~ ~~
 						REPLACE_TEXTUALLY ~ $~ ~~
 					END
-				END ~%function%(%quote%%MATCH1%%quote%)~ //return correct string
+				END ~%function%(%quote%%MATCH1%%quote%)~ //replace single-line function
 			END
 			PATCH_IF ~%quote%~ STR_EQ ~@~ BEGIN
 				REPLACE_TEXTUALLY ~@~ "~~~~~"
