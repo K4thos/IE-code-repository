@@ -29,7 +29,7 @@ BEGIN
 				REPLACE_TEXTUALLY "~~~~~" "@"
 				SPRINT quote ~@~ //single character so that it can be captured with the same regexp code
 			END
-			PATCH_FOR_EACH function IN Bubb_LUA Bubb_StoreObjectStat BEGIN //add Bubb style function names here
+			PATCH_FOR_EACH function IN Bubb_LUA BEGIN //you can add more Bubb style multi-line actions/triggers here if needed
 				REPLACE_EVALUATE CASE_INSENSITIVE ~%function%([%newline%]*%quote%[%newline%]*\([^%quote%]+\)[%newline%]*%quote%[%newline%]*)~ BEGIN
 					PATCH_PRINT ~Converting %function% code: %MATCH1%~
 					INNER_PATCH_SAVE MATCH1 ~%MATCH1%~ BEGIN //convert multi-line Bubb function content into single line
