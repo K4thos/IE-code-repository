@@ -2,6 +2,12 @@
 //If spell.ids already contains a spell with the same name, of the same type and level than the one you're adding, then that spell is overwritten (rather than adding a duplicate version).
 //If spell.ids already contains a spell with the same name, but of different type (and/or level if precise level has been set) than the one you're adding, then the current reference is removed from spell.ids, and then the action proceeds as usual.
 
+//Example usage:
+//LAF ADD_SPELL_EX INT_VAR type = 2 level = 4 STR_VAR file = EVAL ~%MOD_FOLDER%/resource.SPL~ name = ~SYMBOLIC_NAME~ RET DEST_FILE END
+//COPY_EXISTING ~%DEST_FILE%~ ~override~
+//	LPM EET_PCU_core
+//BUT_ONLY
+
 DEFINE_ACTION_FUNCTION ADD_SPELL_EX
 	INT_VAR
 	type = "-1" //1 = priest (SPPR); 2 = wizard (SPWI); 3 = innate (SPIN); 4 = class (SPCL)
@@ -103,7 +109,7 @@ BEGIN
 					OUTER_SET outcome = 2
 				END
 			END
-			ACTION_IF (outcome != 3) AND (NOT VARIABLE_IS_SET $local_spellNum("%type%%spell_level%%num%")) BEGIN
+			ACTION_IF (outcome != 3) AND (NOT VARIABLE_IS_SET $local_spellNum("%type%%spell_level%%num%")) AND (NOT FILE_EXISTS_IN_GAME ~%prefix%%spell_level%%num%.SPL~) BEGIN
 				OUTER_SPRINT spell_num ~%type%%spell_level%%num%~
 				OUTER_SPRINT spell_res ~%prefix%%spell_level%%num%~
 				OUTER_SET outcome = 1
