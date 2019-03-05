@@ -5,7 +5,7 @@ DEFINE_ACTION_FUNCTION ~ADD_WORLDMAP_TBL~
 	inclSv = 0            // to 1 if you want to patch saved game worldmaps as well as the master worldmap. NB: changes to saved games are uninstallable
 	verbose = 0           // to 1 to enable debug messages
 	patch_bp_files = 0    // to 1 to patch/create gameFolder/Worldmap files used by BP-BGT Worldmap for wmp creation (needs path_to_areas_bp, path_to_links, path_to_trans)
-	patch_mastarea = 0    // to 1 to patch MASTAREA.2da if area entries don't exist there yet
+	patch_mastarea = 0    // to 1 to patch MASTAREA.2da if area entries doesn't exist there yet
 	add_x = 0             // add this value to area's X (east-west) coordinate specified in TBL file (BP-BGT Worldmap areas file is excluded)
 	add_y = 0             // add this value to area's Y (north-south) coordinate specified in TBL file (BP-BGT Worldmap areas file is excluded)
 	STR_VAR
@@ -13,6 +13,7 @@ DEFINE_ACTION_FUNCTION ~ADD_WORLDMAP_TBL~
 	path_to_areas_bp = ~~ // as above but this points to file used by BP-BGT Worldmap - this way if some save is detected to have BP-BGT Worldmap wmp stored it will use different coordinates / values
 	path_to_links = ~~    // full path to the text file containing your links data, e.g. ~mymod/tbl/links.tbl~
 	path_to_trans = ~~    // full path to the text file containing your translation data, e.g. ~mymod/language/%LANGUAGE%/worldmap.tra~
+	strref_array = ~~     // array containing pre-set strrefs (ARE name => strref) for area names and tooltips
 	worldmap = ~worldmap~ // which .wmp file should be patched, e.g. ~worldm25~
 	icons_table = ~~      // array containing remapped icons (old_index => new_index) for path_to_areas (use alongside function that can patch BAMv1/BAMv2 icon file)
 	RET
@@ -30,6 +31,12 @@ BEGIN
 	ACTION_CLEAR_ARRAY save_dirs
 	ACTION_CLEAR_ARRAY areNum_array
 	ACTION_CLEAR_ARRAY bp_array
+	ACTION_IF NOT ~%strref_array%~ STR_EQ ~~ BEGIN
+		ACTION_PHP_EACH ~%strref_array%~ AS area => strref BEGIN
+			PRINT ~%area% => %strref%~
+			OUTER_SET $trans_array("@%area%") = strref
+		END
+	END
 	ACTION_IF NOT ~%icons_table%~ STR_EQ ~~ BEGIN
 		ACTION_CLEAR_ARRAY remapped_icons
 		ACTION_PHP_EACH ~%icons_table%~ AS old => new BEGIN
@@ -95,7 +102,9 @@ BEGIN
 				INNER_PATCH_SAVE string "%MATCH4%" BEGIN
 					REPLACE_TEXTUALLY "###" " "
 				END
-				DEFINE_ASSOCIATIVE_ARRAY trans_array BEGIN ~%MATCH2%~ => ~%string%~ END
+				PATCH_IF (NOT VARIABLE_IS_SET $trans_array("%MATCH2%")) BEGIN
+					DEFINE_ASSOCIATIVE_ARRAY trans_array BEGIN ~%MATCH2%~ => ~%string%~ END
+				END
 			END ~%MATCH0%~
 	END
 	ACTION_IF inclSv = 1 BEGIN
@@ -203,8 +212,8 @@ DEFINE_PATCH_MACRO add_worldmap_macro BEGIN
 		PATCH_FOR_EACH var IN name tooltip BEGIN
 			SPRINT match EVAL ~%%var%%~
 			PATCH_IF ~%match%~ STR_EQ ~N~ BEGIN
-				SPRINT EVAL ~%var%~ ~~
-			END ELSE PATCH_IF (VARIABLE_IS_SET $trans_array("%match%")) BEGIN 
+				SET EVAL ~%var%~ = ~-1~
+			END ELSE PATCH_IF (VARIABLE_IS_SET $trans_array("%match%")) BEGIN
 				TEXT_SPRINT EVAL ~%var%~ $trans_array(~%match%~)
 			END ELSE PATCH_IF ~%path_to_trans%~ STR_EQ ~~ BEGIN
 				PATCH_FAIL ~ADD_WORLDMAP_TBL: Can't evaluate %match% string, path_to_trans has not been specified~
@@ -232,12 +241,16 @@ DEFINE_PATCH_MACRO add_worldmap_macro BEGIN
 				WRITE_LONG (area_off + 0xf0*j + 0x34) bam_anim // map icon
 				WRITE_LONG (area_off + 0xf0*j + 0x38) x_pos // x coordinate
 				WRITE_LONG (area_off + 0xf0*j + 0x3c) y_pos // y coordinate
-				PATCH_IF ~%name%~ STR_EQ ~~ BEGIN
+				PATCH_IF IS_AN_INT name BEGIN
+					WRITE_LONG (area_off + 0xf0*j + 0x40) name
+				END ELSE PATCH_IF ~%name%~ STR_EQ ~~ BEGIN
 					WRITE_LONG (area_off + 0xf0*j + 0x40) ~-1~
 				END ELSE BEGIN
 					SAY (area_off + 0xf0*j + 0x40) "%name%" // area name
 				END
-				PATCH_IF ~%tooltip%~ STR_EQ ~~ BEGIN
+				PATCH_IF IS_AN_INT tooltip BEGIN
+					WRITE_LONG (area_off + 0xf0*j + 0x40) tooltip
+				END ELSE PATCH_IF ~%tooltip%~ STR_EQ ~~ BEGIN
 					WRITE_LONG (area_off + 0xf0*j + 0x44) ~-1~
 				END ELSE BEGIN
 					SAY (area_off + 0xf0*j + 0x44) "%tooltip%" // area description
@@ -263,12 +276,16 @@ DEFINE_PATCH_MACRO add_worldmap_macro BEGIN
 			WRITE_LONG (area_off + 0xf0*area_num + 0x34) bam_anim // map icon
 			WRITE_LONG (area_off + 0xf0*area_num + 0x38) x_pos // x coordinate
 			WRITE_LONG (area_off + 0xf0*area_num + 0x3c) y_pos // y coordinate
-			PATCH_IF ~%name%~ STR_EQ ~~ BEGIN
+			PATCH_IF IS_AN_INT name BEGIN
+				WRITE_LONG (area_off + 0xf0*area_num + 0x40) name
+			END ELSE PATCH_IF ~%name%~ STR_EQ ~~ BEGIN
 				WRITE_LONG (area_off + 0xf0*area_num + 0x40) ~-1~
 			END ELSE BEGIN
 				SAY (area_off + 0xf0*area_num + 0x40) "%name%" // area name
 			END
-			PATCH_IF ~%tooltip%~ STR_EQ ~~ BEGIN
+			PATCH_IF IS_AN_INT tooltip BEGIN
+				WRITE_LONG (area_off + 0xf0*area_num + 0x40) tooltip
+			END ELSE PATCH_IF ~%tooltip%~ STR_EQ ~~ BEGIN
 				WRITE_LONG (area_off + 0xf0*area_num + 0x44) ~-1~
 			END ELSE BEGIN
 				SAY (area_off + 0xf0*area_num + 0x44) "%tooltip%" // area description
