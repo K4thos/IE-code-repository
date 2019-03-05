@@ -8,6 +8,7 @@ DEFINE_ACTION_FUNCTION ADD_SPELL_EX
 	level = "-1" //spell level slot (from 0 to 9). If omitted the function will lookup first free slot starting from level 0 and increasing it if needed. Notice that this option only affects spell name, not 0x34 offset in SPL file
 	min = 0 //add spell at this slot or higher
 	max = 49 //add spell at this slot or lower
+	hide = 0 //0 = normal availability; 1 = spell added to HIDESPL.2DA
 	STR_VAR
 	file = "" //path to spell you want to add
 	output = "override" //output directory where the added spell should be copied
@@ -33,7 +34,7 @@ BEGIN
 	ACTION_IF ~%name%~ STR_EQ ~~ BEGIN
 		FAIL ~ADD_SPELL_EX: %file% name not specified~
 	END
-	PRINT ~ADD_SPELL_EX: adding spell %name%~
+	PRINT ~ADD_SPELL_EX: adding spell %name% (type = %type%; level = %level%; min = %min%; max = %max%; hide = %hide%)~
 	ACTION_IF ~%file%~ STR_EQ ~~ BEGIN
 		FAIL ~ADD_SPELL_EX: path to spell file not specified~
 	END
@@ -117,6 +118,12 @@ BEGIN
 			FAIL ~ADD_SPELL_EX: couldn't add %name% to spell.ids as no slots remain~
 		END
 	END
+	ACTION_IF hide = 1 AND (NOT FILE_CONTAINS_EVALUATED (~hidespl.2da~ ~^%spell_res%[ %TAB%]~)) BEGIN
+		COPY_EXISTING ~hidespl.2da~ ~override~
+			REPLACE_TEXTUALLY ~IS_REMOVED~ ~IS_REMOVED%LNL%%spell_res% 1 0 0~
+			PRETTY_PRINT_2DA
+		BUT_ONLY
+	END
 	COPY ~%file%~ ~%output%/%spell_res%.SPL~
 	OUTER_SPRINT spell_name ~%name%~
 	ACTION_IF (NOT FILE_CONTAINS_EVALUATED (~add_spell.ids~ ~^%spell_num%[ %TAB%]%spell_name%~)) BEGIN
@@ -125,5 +132,5 @@ BEGIN
 	ACTION_IF (NOT FILE_CONTAINS_EVALUATED (~spell.ids~ ~^%spell_num%[ %TAB%]%spell_name%~)) BEGIN
 		APPEND ~spell.ids~ ~%spell_num% %spell_name%~
 	END
-	PRINT ~ADD_SPELL_EX: added spell %spell_num% %name% (%spell_res%.SPL)~
+	PRINT ~ADD_SPELL_EX: added spell %spell_num% %name% (%SOURCE_RES% => %DEST_RES%)~
 END
