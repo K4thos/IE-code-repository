@@ -2,14 +2,14 @@
 //The action can return numerical reference of the appended entry or existing index if symbolic name already exists within the file.
 
 //Example usage:
-//LAF APPEND_TO_IDS INT_VAR min = 400 max = 65535 STR_VAR file = ~STATS.IDS~ name = ~STAT_NAME~ RET index END
+//LAF APPEND_TO_IDS INT_VAR min = 400 max = 65535 STR_VAR file = ~STATS.IDS~ name = ~SYMBOLIC_NAME~ RET index END
 
 DEFINE_ACTION_FUNCTION APPEND_TO_IDS
 	INT_VAR
 	min = 1 //append to ids at this index or higher
 	max = 254 //append to ids at this index or lower
-	fail = 0 //set to 1 to fail installation if there are no enough ids slots
-	warn = 1 //set to 0 to not print warning if there are no enough ids slots
+	fail = 0 //set to 1 to fail installation if there are not enough ids slots
+	warn = 1 //set to 0 to not print warning if there are not enough ids slots
 	STR_VAR
 	file = ~~ //ids filename that we append to
 	name = ~~ //symbolic name to append
