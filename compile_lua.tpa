@@ -10,7 +10,7 @@ DEFINE_ACTION_FUNCTION COMPILE_LUA
 INT_VAR
 	eval = 1 //set to 0 to disable variable evaluation during compilation
 STR_VAR
-	path = ~~ //can be either a single BAF file or directory where BAF files are located
+	path = ~~ //can be either a single BAF/D file or directory where BAF and/or D files are located
 	quote = ~"~ //adjust quotation that you're using for EEex_Lua style functions (weidu supports following quotations: ", ~, %, ~~~~~)
 BEGIN
 	OUTER_SPRINT newline ~%WNL%%LNL%%MNL%%TAB% ~
@@ -25,7 +25,7 @@ BEGIN
 	//loop through files_array
 	ACTION_PHP_EACH files_array AS file => dummy BEGIN
 		PRINT ~Compilling %file%...~
-		COPY - ~%file%~ ~.../%file%~ //copy the BAF into inlined file
+		COPY - ~%file%~ ~.../%file%~ //copy into inlined file
 			PATCH_IF ~%quote%~ STR_EQ "~~~~~" BEGIN
 				REPLACE_TEXTUALLY "~~~~~" "@"
 				SPRINT quote ~@~ //single character so that it can be captured with the same regexp code
