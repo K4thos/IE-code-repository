@@ -1,0 +1,40 @@
+//Action and patch functions used for executing Lua code and optionally retrieving the outcome back into WeiDU
+
+//Example usage:
+//LPF EXECUTE_LUA STR_VAR lua = ~3 / 2~ RET return END
+//LPF EXECUTE_LUA INT_VAR seed = 1 STR_VAR lua = ~math.random(1, 100) / 100~ RET return seed END
+//LPF EXECUTE_LUA INT_VAR seed = seed STR_VAR lua = EVAL ~loadfile "%MOD_FOLDER%/someFile.lua"~ RET return seed END
+
+DEFINE_ACTION_FUNCTION EXECUTE_LUA
+INT_VAR
+	seed = 0 //math.random Lua function will generate random outcome only if unique seed value is sent each time you need to use it
+STR_VAR
+	bin = EVAL ~%MOD_FOLDER%\bin\lua.exe~ //path to Lua executable
+	lua = ~~ //Lua code that should be executed
+RET
+	return //outcome of your Lua code is stored in this variable
+	seed //returned value is always increased by 1 (you can use it in the next EXECUTE_LUA run to get unique randomseed)
+BEGIN
+<<<<<<<< .../execute.lua
+--os.time() is static in WeiDU, add unique value to get different math.random outcome
+math.randomseed(os.time() + %seed%)
+local file = io.open("execute.txt","w+")
+if file == nil then return end
+file:write(%lua%)
+file:close()
+>>>>>>>>
+	COPY + ~.../execute.lua~ ~execute.lua~ EVALUATE_BUFFER
+	AT_NOW ~%bin% execute.lua~
+	COPY + ~execute.txt~ ~execute.txt~
+		READ_ASCII 0x0 "return" (%SOURCE_SIZE%)
+	DELETE + ~execute.lua~
+		~execute.txt~
+	PRINT ~EXECUTE_LUA: %lua% => %return%~
+	OUTER_SET seed = seed + 1
+END
+
+DEFINE_PATCH_FUNCTION EXECUTE_LUA INT_VAR seed = 0 STR_VAR bin = EVAL ~%MOD_FOLDER%\bin\lua.exe~ lua = ~~ RET return seed BEGIN
+	INNER_ACTION BEGIN
+		LAF EXECUTE_LUA INT_VAR seed = seed STR_VAR bin = EVAL ~%bin%~ lua = EVAL ~%lua%~ RET return seed END
+	END
+END
