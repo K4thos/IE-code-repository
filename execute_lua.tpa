@@ -1,4 +1,4 @@
-//Action and patch functions used for executing Lua code and optionally retrieving the outcome back into WeiDU
+//Action and patch functions used for executing Lua code and retrieving the outcome back into WeiDU
 
 //Example usage:
 //LPF EXECUTE_LUA STR_VAR lua = ~3 / 2~ RET return END
