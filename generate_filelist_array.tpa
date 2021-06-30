@@ -1,4 +1,4 @@
-// Action function for generating array listing all files inside specified path and its subdirectories.
+// Action function for generating array listing all files inside specified path and all its subdirectories.
 // Outcome associative array consists of following data matching weidu COPY variables:
 // FILESPEC, DIRECTORY, RES, EXT, SIZE => FILE
 
@@ -18,10 +18,9 @@ DEFINE_ACTION_FUNCTION GENERATE_FILELIST_ARRAY
 	RET_ARRAY
 	filelist //returned associative array containing all filenames and additional file data
 BEGIN
-	//upper case all keys
-	ACTION_PHP_EACH skip_array AS file => ~~ BEGIN
+	ACTION_PHP_EACH ~%skip_array%~ AS file => ~~ BEGIN
 		ACTION_TO_UPPER file
-		OUTER_SPRINT $skip_array("%file%") ""
+		OUTER_SPRINT $EVAL "%skip_array%"("%file%") ""
 	END
 	LAF generate_filelist_internal STR_VAR dir = EVAL ~%path%~ skip_array = EVAL "%skip_array%" RET_ARRAY filelist END
 END
