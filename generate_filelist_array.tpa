@@ -5,7 +5,7 @@
 //Example usage:
 /*ACTION_DEFINE_ASSOCIATIVE_ARRAY skip_array BEGIN ~FOO.BAR~ => ~~ END
 
-LAF GENERATE_FILELIST_ARRAY STR_VAR path = EVAL ~%MOD_FOLDER%~ skip_files = "skip_array" RET_ARRAY filelist_array = filelist END
+LAF GENERATE_FILELIST_ARRAY STR_VAR path = EVAL ~%MOD_FOLDER%~ skip_array = "skip_array" RET_ARRAY filelist_array = filelist END
 
 ACTION_PHP_EACH filelist_array AS data => file BEGIN
 	PRINT ~FILESPEC: %data%; DIRECTORY: %data_1%; RES: %data_2%; EXT: %data_3%; SIZE: %data_4%; FILE: %file%~
@@ -14,35 +14,34 @@ END*/
 DEFINE_ACTION_FUNCTION GENERATE_FILELIST_ARRAY
 	STR_VAR
 	path = EVAL "%MOD_FOLDER%" //path to top directory from which files and directories lookup starts (defaults to %MOD_FOLDER%)
-	skip_files = "" //associative array containing file names that should be skipped (uppercased filenames in the style as printed by weidu SOURCE_FILE variable)
-	skip_dirs = "" //associative array containing directories that should be skipped (full paths, case sensitive, forward slashes formatting, without slash at the end)
+	skip_array = "" //associative array containing file paths that should be skipped
 	RET_ARRAY
 	filelist //returned associative array containing all filenames and additional file data
 BEGIN
-	LAF generate_filelist_internal STR_VAR dir = EVAL ~%path%~ skip_files = EVAL "%skip_files%" skip_dirs = EVAL "%skip_dirs%" RET_ARRAY filelist END
+	//upper case all keys
+	ACTION_PHP_EACH skip_array AS file => ~~ BEGIN
+		ACTION_TO_UPPER file
+		OUTER_SPRINT $skip_array("%file%") ""
+	END
+	LAF generate_filelist_internal STR_VAR dir = EVAL ~%path%~ skip_array = EVAL "%skip_array%" RET_ARRAY filelist END
 END
 
 //used internally by GENERATE_FILELIST_ARRAY function
 DEFINE_ACTION_FUNCTION generate_filelist_internal
 	STR_VAR
 	dir = ""
-	skip_files = ""
-	skip_dirs = ""
+	skip_array = ""
 	RET_ARRAY
 	filelist
 BEGIN
-	ACTION_IF (NOT VARIABLE_IS_SET $EVAL "%skip_dirs%"("%dir%")) BEGIN
-		ACTION_BASH_FOR ~%dir%~ ~^.*$~ BEGIN
-			ACTION_IF (NOT VARIABLE_IS_SET $EVAL "%skip_files%"("%BASH_FOR_FILE%")) BEGIN
-				OUTER_SPRINT $filelist("%BASH_FOR_FILESPEC%" "%BASH_FOR_DIRECTORY%" "%BASH_FOR_RES%" "%BASH_FOR_EXT%" "%BASH_FOR_SIZE%") "%BASH_FOR_FILE%"
-			END
+	ACTION_BASH_FOR ~%dir%~ ~^.*$~ BEGIN
+		ACTION_IF (NOT VARIABLE_IS_SET $EVAL "%skip_array%"("%BASH_FOR_FILE%")) BEGIN
+			OUTER_SPRINT $filelist("%BASH_FOR_FILESPEC%" "%BASH_FOR_DIRECTORY%" "%BASH_FOR_RES%" "%BASH_FOR_EXT%" "%BASH_FOR_SIZE%") "%BASH_FOR_FILE%"
 		END
 	END
 	ACTION_CLEAR_ARRAY loopdirs_array
 	GET_DIRECTORY_ARRAY loopdirs_array ~%dir%~ ~~
 	ACTION_PHP_EACH loopdirs_array AS index => directory BEGIN
-		ACTION_IF (NOT VARIABLE_IS_SET $EVAL "%skip_dirs%"("%directory%")) BEGIN
-			LAF generate_filelist_internal STR_VAR dir = EVAL ~%directory%~ skip_files = EVAL "%skip_files%" skip_dirs = EVAL "%skip_dirs%" RET_ARRAY filelist END
-		END
+		LAF generate_filelist_internal STR_VAR dir = EVAL ~%directory%~ skip_array = EVAL "%skip_array%" RET_ARRAY filelist END
 	END
 END
