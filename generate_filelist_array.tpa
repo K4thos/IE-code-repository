@@ -1,12 +1,10 @@
-// Action function for generating array listing all files inside specified path and all its subdirectories.
-// Outcome associative array consists of following data matching weidu COPY variables:
-// FILESPEC, DIRECTORY, RES, EXT, SIZE => FILE
+// Action function for generating associative array listing all files inside specified path and all its subdirectories (file path => extension)
 
 //Example usage:
 /*LAF GENERATE_FILELIST_ARRAY STR_VAR path = EVAL ~%MOD_FOLDER%~ RET_ARRAY filelist_array = filelist END
 
-ACTION_PHP_EACH filelist_array AS data => file BEGIN
-	PRINT ~FILESPEC: %data%; DIRECTORY: %data_1%; RES: %data_2%; EXT: %data_3%; SIZE: %data_4%; FILE: %file%~
+ACTION_PHP_EACH filelist_array AS file => ext BEGIN
+	PRINT ~%file% => %ext%~
 END*/
 
 DEFINE_ACTION_FUNCTION GENERATE_FILELIST_ARRAY
@@ -15,22 +13,33 @@ DEFINE_ACTION_FUNCTION GENERATE_FILELIST_ARRAY
 	RET_ARRAY
 	filelist //returned associative array containing all filenames and additional file data
 BEGIN
-	LAF generate_filelist_internal STR_VAR dir = EVAL ~%path%~ RET_ARRAY filelist END
+	OUTER_PATCH_SAVE path ~%path%~ BEGIN
+		REPLACE_TEXTUALLY ~\\~ ~/~
+		REPLACE_TEXTUALLY ~^\./~ ~~
+		REPLACE_TEXTUALLY ~/$~ ~~
+	END
+	LAF generate_filelist_internal STR_VAR path = EVAL ~%path%~ RET_ARRAY filelist END
 END
 
 //used internally by GENERATE_FILELIST_ARRAY function
 DEFINE_ACTION_FUNCTION generate_filelist_internal
 	STR_VAR
-	dir = ""
+	path = ""
 	RET_ARRAY
 	filelist
 BEGIN
-	ACTION_BASH_FOR ~%dir%~ ~^.*$~ BEGIN
-		OUTER_SPRINT $filelist("%BASH_FOR_FILESPEC%" "%BASH_FOR_DIRECTORY%" "%BASH_FOR_RES%" "%BASH_FOR_EXT%" "%BASH_FOR_SIZE%") "%BASH_FOR_FILE%"
+	ACTION_CLEAR_ARRAY loopfiles_array
+	GET_FILE_ARRAY loopfiles_array ~%path%~ ~~
+	ACTION_PHP_EACH loopfiles_array AS index => file BEGIN
+		OUTER_PATCH_SAVE ext ~%file%~ BEGIN
+			REPLACE_TEXTUALLY ~^.+\.\([^\.]+\)$~ ~\1~
+		END
+		ACTION_TO_LOWER ext
+		OUTER_SPRINT $filelist("%file%") "%ext%"
 	END
 	ACTION_CLEAR_ARRAY loopdirs_array
-	GET_DIRECTORY_ARRAY loopdirs_array ~%dir%~ ~~
-	ACTION_PHP_EACH loopdirs_array AS index => directory BEGIN
-		LAF generate_filelist_internal STR_VAR dir = EVAL ~%directory%~ RET_ARRAY filelist END
+	GET_DIRECTORY_ARRAY loopdirs_array ~%path%~ ~~
+	ACTION_PHP_EACH loopdirs_array AS index => dir BEGIN
+		LAF generate_filelist_internal STR_VAR path = EVAL ~%dir%~ RET_ARRAY filelist END
 	END
 END
