@@ -3,7 +3,7 @@
 // FILESPEC, DIRECTORY, RES, EXT, SIZE => FILE
 
 //Example usage:
-/*ACTION_DEFINE_ASSOCIATIVE_ARRAY skip_array BEGIN ~FOO.BAR~ => ~~ END
+/*ACTION_DEFINE_ASSOCIATIVE_ARRAY skip_array BEGIN ~path/foo.bar~ => ~~ END
 
 LAF GENERATE_FILELIST_ARRAY STR_VAR path = EVAL ~%MOD_FOLDER%~ skip_array = "skip_array" RET_ARRAY filelist_array = filelist END
 
@@ -34,7 +34,7 @@ DEFINE_ACTION_FUNCTION generate_filelist_internal
 	filelist
 BEGIN
 	ACTION_BASH_FOR ~%dir%~ ~^.*$~ BEGIN
-		ACTION_IF (NOT VARIABLE_IS_SET $EVAL "%skip_array%"("%BASH_FOR_FILE%")) BEGIN
+		ACTION_IF (NOT VARIABLE_IS_SET $EVAL "%skip_array%"("%BASH_FOR_FILESPEC%")) BEGIN
 			OUTER_SPRINT $filelist("%BASH_FOR_FILESPEC%" "%BASH_FOR_DIRECTORY%" "%BASH_FOR_RES%" "%BASH_FOR_EXT%" "%BASH_FOR_SIZE%") "%BASH_FOR_FILE%"
 		END
 	END
