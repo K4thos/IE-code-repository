@@ -3,9 +3,7 @@
 // FILESPEC, DIRECTORY, RES, EXT, SIZE => FILE
 
 //Example usage:
-/*ACTION_DEFINE_ASSOCIATIVE_ARRAY skip_array BEGIN ~path/foo.bar~ => ~~ END
-
-LAF GENERATE_FILELIST_ARRAY STR_VAR path = EVAL ~%MOD_FOLDER%~ skip_array = "skip_array" RET_ARRAY filelist_array = filelist END
+/*LAF GENERATE_FILELIST_ARRAY STR_VAR path = EVAL ~%MOD_FOLDER%~ RET_ARRAY filelist_array = filelist END
 
 ACTION_PHP_EACH filelist_array AS data => file BEGIN
 	PRINT ~FILESPEC: %data%; DIRECTORY: %data_1%; RES: %data_2%; EXT: %data_3%; SIZE: %data_4%; FILE: %file%~
@@ -14,33 +12,25 @@ END*/
 DEFINE_ACTION_FUNCTION GENERATE_FILELIST_ARRAY
 	STR_VAR
 	path = EVAL "%MOD_FOLDER%" //path to top directory from which files and directories lookup starts (defaults to %MOD_FOLDER%)
-	skip_array = "" //associative array containing file paths that should be skipped
 	RET_ARRAY
 	filelist //returned associative array containing all filenames and additional file data
 BEGIN
-	ACTION_PHP_EACH ~%skip_array%~ AS file => ~~ BEGIN
-		ACTION_TO_UPPER file
-		OUTER_SPRINT $EVAL "%skip_array%"("%file%") ""
-	END
-	LAF generate_filelist_internal STR_VAR dir = EVAL ~%path%~ skip_array = EVAL "%skip_array%" RET_ARRAY filelist END
+	LAF generate_filelist_internal STR_VAR dir = EVAL ~%path%~ RET_ARRAY filelist END
 END
 
 //used internally by GENERATE_FILELIST_ARRAY function
 DEFINE_ACTION_FUNCTION generate_filelist_internal
 	STR_VAR
 	dir = ""
-	skip_array = ""
 	RET_ARRAY
 	filelist
 BEGIN
 	ACTION_BASH_FOR ~%dir%~ ~^.*$~ BEGIN
-		ACTION_IF (NOT VARIABLE_IS_SET $EVAL "%skip_array%"("%BASH_FOR_FILESPEC%")) BEGIN
-			OUTER_SPRINT $filelist("%BASH_FOR_FILESPEC%" "%BASH_FOR_DIRECTORY%" "%BASH_FOR_RES%" "%BASH_FOR_EXT%" "%BASH_FOR_SIZE%") "%BASH_FOR_FILE%"
-		END
+		OUTER_SPRINT $filelist("%BASH_FOR_FILESPEC%" "%BASH_FOR_DIRECTORY%" "%BASH_FOR_RES%" "%BASH_FOR_EXT%" "%BASH_FOR_SIZE%") "%BASH_FOR_FILE%"
 	END
 	ACTION_CLEAR_ARRAY loopdirs_array
 	GET_DIRECTORY_ARRAY loopdirs_array ~%dir%~ ~~
 	ACTION_PHP_EACH loopdirs_array AS index => directory BEGIN
-		LAF generate_filelist_internal STR_VAR dir = EVAL ~%directory%~ skip_array = EVAL "%skip_array%" RET_ARRAY filelist END
+		LAF generate_filelist_internal STR_VAR dir = EVAL ~%directory%~ RET_ARRAY filelist END
 	END
 END
