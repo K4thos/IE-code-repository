@@ -152,8 +152,9 @@ BEGIN
 			i = 0
 			PHP_EACH cycles_tbl AS data => start_cycle BEGIN
 				WRITE_SHORT (cycles_off + 0x4*(num_cycles + i) + 0x0) ~%data_1%~ //Count of frame entries in this cycle
+				READ_SHORT (cycles_off + 0x4*(num_cycles + i - 1) + 0x0) old_count_of_frames
 				READ_SHORT (cycles_off + 0x4*(num_cycles + i - 1) + 0x2) old_start_cycle
-				SET new_start_cycle = old_start_cycle + ~%data_1%~
+				SET new_start_cycle = old_start_cycle + old_count_of_frames // + ~%data_1%~
 				WRITE_SHORT (cycles_off + 0x4*(num_cycles + i) + 0x2) new_start_cycle //Start index of frame entries in this cycle
 				i = i + 1
 			END
